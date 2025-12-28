@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  passwordHash  String
+  name          String?
+  role          String     @default("USER") // "ADMIN" or "USER"
+  tasks         Task[]
+  templates     Template[]
+  comments      Comment[]
+  createdAt     DateTime   @default(now())
+}
+
+model Task {
+  id           String    @id @default(uuid())
+  description  String
+  category     String?
+  ticketNumber String?   // Optional, primarily for Axios category
+  status       String    @default("PENDING") // PENDING, COMPLETED, IN_PROGRESS
+  date         DateTime  @default(now())
+  
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  
+  comments     Comment[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Template {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  category    String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}

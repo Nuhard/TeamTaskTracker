@@ -1,0 +1,28 @@
+# Next.js
+task-system/.next/
+task-system/out/
+
+# Dependencies
+task-system/node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files
+task-system/.env
+task-system/.env.local
+task-system/.env.development.local
+task-system/.env.test.local
+task-system/.env.production.local
+
+# Database
+task-system/prisma/dev.db
+task-system/prisma/dev.db-journal
+
+# Logs
+task-system/npm-debug.log*
+task-system/yarn-debug.log*
+task-system/yarn-error.log*
+task-system/*_output.txt
+task-system/build_log.txt

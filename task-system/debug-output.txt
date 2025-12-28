@@ -1,0 +1,4 @@
+--- User Roles Debug ---
+Email: Nuhard.Nawas@cloudsolutions.com.sa | Role: 'USER' 
+Email: Ashan.Shanaka@cloudsolutions.com.sa | Role: 'USER' 
+Email: admin@example.com | Role: 'ADMIN' 

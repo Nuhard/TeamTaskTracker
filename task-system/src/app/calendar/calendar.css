@@ -1,0 +1,97 @@
+/* Calendar custom styles for dark/light theme */
+.rbc-calendar {
+    color: #e5e7eb;
+}
+
+[data-theme="light"] .rbc-calendar {
+    color: #1f2937;
+}
+
+/* Header styling */
+.rbc-header {
+    padding: 12px 6px;
+    font-weight: 600;
+    color: #9ca3af;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .rbc-header {
+    color: #4b5563;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Today highlight */
+.rbc-today {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="light"] .rbc-today {
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+/* Date cells */
+.rbc-date-cell {
+    padding: 6px;
+    color: #d1d5db;
+}
+
+[data-theme="light"] .rbc-date-cell {
+    color: #374151;
+}
+
+/* Month view cells */
+.rbc-off-range {
+    color: #6b7280;
+}
+
+[data-theme="light"] .rbc-off-range {
+    color: #9ca3af;
+}
+
+/* Toolbar buttons */
+.rbc-toolbar button {
+    color: #e5e7eb;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+[data-theme="light"] .rbc-toolbar button {
+    color: #1f2937;
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.rbc-toolbar button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .rbc-toolbar button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.rbc-toolbar button.rbc-active {
+    background-color: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Event styling */
+.rbc-event {
+    font-size: 12px;
+    padding: 4px;
+}
+
+/* Grid lines */
+.rbc-day-bg,
+.rbc-month-row,
+.rbc-day-slot {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="light"] .rbc-day-bg,
+[data-theme="light"] .rbc-month-row,
+[data-theme="light"] .rbc-day-slot {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+}
