@@ -116,9 +116,9 @@ export default function TaskForm({ task, onClose, onSave }: Props) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="glass-panel w-full max-w-md p-8 rounded-2xl border border-white/20 shadow-2xl">
-                <h2 className="text-2xl font-bold mb-6 text-white text-center pb-4 border-b border-white/10">{task ? "Edit Task" : "New Task"}</h2>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 z-50">
+            <div className="glass-panel w-full max-w-md p-5 md:p-8 rounded-2xl border border-white/20 shadow-2xl max-h-[95vh] overflow-y-auto">
+                <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-white text-center pb-4 border-b border-white/10">{task ? "Edit Task" : "New Task"}</h2>
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label className="block mb-2 text-sm font-medium text-gray-300">Description</label>

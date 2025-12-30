@@ -18,21 +18,13 @@ export default function AdminLogin() {
             const res = await fetch("/api/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form)
+                body: JSON.stringify({ ...form, requiredRole: "ADMIN" })
             });
 
             const data = await res.json();
 
             if (res.ok) {
-                // Check if user is actually admin
-                if (data.user.role !== 'ADMIN') {
-                    console.log("Role mismatch:", data.user.role);
-                    setError(`Access Denied: You are not an Administrator. (Role: ${data.user.role})`);
-                    // Optionally logout immediately
-                    await fetch("/api/auth/logout", { method: "POST" });
-                } else {
-                    router.push("/admin");
-                }
+                router.push("/admin");
             } else {
                 setError(data.error || "Login failed");
             }

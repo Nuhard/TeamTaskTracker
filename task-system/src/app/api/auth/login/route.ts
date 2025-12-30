@@ -5,7 +5,7 @@ import { signToken } from "@/lib/auth";
 
 export async function POST(request: Request) {
     try {
-        const { email, password } = await request.json();
+        const { email, password, requiredRole } = await request.json();
 
         if (!email || !password) {
             return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -16,13 +16,24 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 
+        // Role restriction check
+        if (requiredRole && user.role !== requiredRole) {
+            const errorMsg = requiredRole === "ADMIN"
+                ? "Access denied: Standard users cannot access the Admin Panel."
+                : "Access denied: Admin accounts must use the Admin Login.";
+            return NextResponse.json({ error: errorMsg }, { status: 403 });
+        }
+
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) {
-            console.log("Login failed: Invalid password for", email);
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 
-        console.log("Login success for:", email, "Role:", user.role);
+        // Update lastLogin
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLogin: new Date() }
+        });
 
         const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
 

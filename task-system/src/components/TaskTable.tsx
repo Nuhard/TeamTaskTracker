@@ -26,45 +26,45 @@ export default function TaskTable({ tasks, onEdit, onDelete }: Props) {
     return (
         <div className="glass rounded-2xl overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[600px] md:min-w-full">
                     <thead>
-                        <tr className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider bg-black/20">
-                            <th className="px-6 py-4 font-semibold">Description</th>
-                            <th className="px-6 py-4 font-semibold">Category</th>
-                            <th className="px-6 py-4 font-semibold">Date</th>
-                            <th className="px-6 py-4 font-semibold">Status</th>
-                            <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                        <tr className="border-b border-white/10 text-gray-400 text-[10px] md:text-xs uppercase tracking-wider bg-black/20">
+                            <th className="px-3 md:px-6 py-4 font-semibold">Description</th>
+                            <th className="px-3 md:px-6 py-4 font-semibold">Category</th>
+                            <th className="px-3 md:px-6 py-4 font-semibold">Date</th>
+                            <th className="px-3 md:px-6 py-4 font-semibold">Status</th>
+                            <th className="px-3 md:px-6 py-4 font-semibold text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm">
                         {tasks.map((task) => (
                             <React.Fragment key={task.id}>
                                 <tr className="border-b border-white/5 hover:bg-white/5 transition duration-150 group">
-                                    <td className="px-6 py-5 font-medium text-gray-200">
+                                    <td className="px-3 md:px-6 py-4 md:py-5 font-medium text-gray-200 min-w-[200px] md:min-w-0">
                                         {task.description}
                                     </td>
-                                    <td className="px-6 py-5 text-gray-400">
-                                        <span className="bg-white/5 px-2 py-1 rounded-md text-xs border border-white/5">
+                                    <td className="px-3 md:px-6 py-4 md:py-5 text-gray-400">
+                                        <span className="bg-white/5 px-2 py-1 rounded-md text-[10px] border border-white/5 whitespace-nowrap">
                                             {task.category || '-'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-5 text-gray-400 font-mono text-xs">
-                                        {format(new Date(task.date), 'MMM dd, yyyy HH:mm')}
+                                    <td className="px-3 md:px-6 py-4 md:py-5 text-gray-400 font-mono text-[10px] whitespace-nowrap">
+                                        {format(new Date(task.date), 'MMM dd, HH:mm')}
                                     </td>
-                                    <td className="px-6 py-5">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wide border ${task.status === 'COMPLETED' ? 'bg-green-500/20 text-green-300 border-green-500/30' :
+                                    <td className="px-3 md:px-6 py-4 md:py-5">
+                                        <span className={`px-2 md:px-3 py-1 rounded-full text-[9px] md:text-[10px] font-bold tracking-wide border whitespace-nowrap ${task.status === 'COMPLETED' ? 'bg-green-500/20 text-green-300 border-green-500/30' :
                                             task.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
                                                 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
                                             }`}>
                                             {task.status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-5 text-right space-x-3 opacity-60 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => toggleExpand(task.id)} className="text-purple-400 hover:text-purple-300 font-medium transition hover:scale-105 inline-block">
+                                    <td className="px-3 md:px-6 py-4 md:py-5 text-right space-x-2 md:space-x-3 opacity-60 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                        <button onClick={() => toggleExpand(task.id)} className="text-purple-400 hover:text-purple-300 font-medium text-[11px] md:text-sm transition hover:scale-105 inline-block">
                                             💬 {expandedTaskId === task.id ? 'Hide' : 'Comments'}
                                         </button>
-                                        <button onClick={() => onEdit(task)} className="text-blue-400 hover:text-blue-300 font-medium transition hover:scale-105 inline-block">Edit</button>
-                                        <button onClick={() => onDelete(task.id)} className="text-red-400 hover:text-red-300 font-medium transition hover:scale-105 inline-block">Delete</button>
+                                        <button onClick={() => onEdit(task)} className="text-blue-400 hover:text-blue-300 font-medium text-[11px] md:text-sm transition hover:scale-105 inline-block">Edit</button>
+                                        <button onClick={() => onDelete(task.id)} className="text-red-400 hover:text-red-300 font-medium text-[11px] md:text-sm transition hover:scale-105 inline-block">Delete</button>
                                     </td>
                                 </tr>
                                 {expandedTaskId === task.id && (

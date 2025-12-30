@@ -1,65 +1,61 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authenticate } from "@/lib/auth";
+import { verifyToken } from "@/lib/auth";
+import { cookies } from "next/headers";
 
-export async function GET(request: Request) {
-    // Allow any authenticated user to view global stats
-    const user = await authenticate(request as any);
-    if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+export async function GET() {
     try {
-        // 1. Global Category Stats
-        const globalTasks = await prisma.task.groupBy({
-            by: ['category'],
-            _count: {
-                category: true,
-            },
-        });
+        const token = cookies().get("token")?.value;
+        const decoded = token ? verifyToken(token) : null;
 
-        const stats: Record<string, number> = {};
-        const categories = ["Axios", "Whatsapp", "Other Task", "Releases", "Monitoring"];
-        categories.forEach(c => stats[c] = 0);
-        globalTasks.forEach((t: any) => {
-            if (t.category) stats[t.category] = t._count.category;
-        });
+        if (!decoded) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
-        // 2. User-wise Activity
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
+        // Fetch all users with 'USER' role and their tasks to build the Team Analytics view
+        const usersWithTasks = await prisma.user.findMany({
+            where: { role: 'USER' },
+            include: {
                 tasks: {
-                    orderBy: { date: 'desc' },
-                    // Limit to recent tasks if list gets too long, but removing limit for now as per "view all" request implication
-                    select: {
-                        id: true,
-                        description: true,
-                        category: true,
-                        ticketNumber: true,
-                        status: true,
-                        date: true
-                    }
+                    orderBy: { date: 'desc' }
                 }
-            },
-            orderBy: { name: 'asc' }
+            }
         });
 
-        const userActivity = users.map((u: any) => ({
+        // Calculate Global Stats (Category Distribution for regular users)
+        const allUserTasks = await prisma.task.findMany({
+            where: {
+                user: { role: 'USER' }
+            }
+        });
+        const globalStats: Record<string, number> = {};
+        allUserTasks.forEach(task => {
+            const cat = task.category || "Other Task";
+            globalStats[cat] = (globalStats[cat] || 0) + 1;
+        });
+
+        // Format User Activity for the board
+        const userActivity = usersWithTasks.map(u => ({
             id: u.id,
-            name: u.name || u.email, // Fallback to email if name is missing
+            name: u.name,
+            email: u.email,
             totalTasks: u.tasks.length,
-            tasks: u.tasks
+            tasks: u.tasks.map(t => ({
+                id: t.id,
+                description: t.description,
+                category: t.category,
+                ticketNumber: t.ticketNumber,
+                status: t.status,
+                date: t.date.toISOString()
+            }))
         }));
 
         return NextResponse.json({
-            currentUserId: user.id,
-            globalStats: stats,
-            userActivity: userActivity
+            globalStats,
+            userActivity,
+            currentUserId: decoded.id
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Analytics Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

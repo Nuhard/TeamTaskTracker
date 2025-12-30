@@ -1,4 +1,3 @@
-
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
@@ -22,7 +21,6 @@ async function main() {
             where: { email },
             data: {
                 role: 'ADMIN',
-                // Optional: Update password too if you want to ensure it matches
                 passwordHash: passwordHash
             }
         });

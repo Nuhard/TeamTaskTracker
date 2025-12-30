@@ -7,27 +7,45 @@ export function middleware(request: NextRequest) {
 
     const token = request.cookies.get('token')?.value
 
+    let userRole = null;
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userRole = payload.role;
+        } catch (e) {
+            console.error("Middleware decode error", e);
+        }
+    }
+
     if (path.startsWith('/api/') || path.startsWith('/_next') || path.startsWith('/static')) {
         return NextResponse.next()
     }
 
+    // Role-based Redirection
+    if (token) {
+        if (userRole === 'ADMIN' && path.startsWith('/dashboard')) {
+            return NextResponse.redirect(new URL('/admin', request.nextUrl))
+        }
+        if (userRole === 'USER' && path.startsWith('/admin')) {
+            return NextResponse.redirect(new URL('/dashboard', request.nextUrl))
+        }
+    }
+
     // Admin Authentication Flow
     if (path.startsWith('/admin')) {
-        // Allow access to the login page itself
         if (path === '/admin/login') {
-            if (token) return NextResponse.redirect(new URL('/admin', request.nextUrl));
+            if (token && userRole === 'ADMIN') return NextResponse.redirect(new URL('/admin', request.nextUrl));
             return NextResponse.next();
         }
 
-        // Protect all other admin routes
         if (!token) {
             return NextResponse.redirect(new URL('/admin/login', request.nextUrl));
         }
     }
 
-    // Standard User Authentication Flow (for root, dashboard, etc)
+    // Standard User Authentication Flow
     if (isPublicPath && token) {
-        return NextResponse.redirect(new URL('/dashboard', request.nextUrl))
+        return NextResponse.redirect(new URL(userRole === 'ADMIN' ? '/admin' : '/dashboard', request.nextUrl))
     }
 
     if (!isPublicPath && !token && !path.startsWith('/admin')) {

@@ -18,6 +18,8 @@ export default function Dashboard() {
     const [filterDate, setFilterDate] = useState("");
     const [filterCategory, setFilterCategory] = useState("");
     const [userName, setUserName] = useState("User");
+    const [user, setUser] = useState<any>(null);
+    const [showStats, setShowStats] = useState(true);
 
     const computeStats = (taskList: any[]) => {
         const newStats: Record<string, number> = {};
@@ -51,12 +53,7 @@ export default function Dashboard() {
             if (Array.isArray(data)) {
                 setTasks(data);
                 computeStats(data);
-                // Extract user name from first task if available
-                if (data.length > 0 && data[0].user?.name) {
-                    setUserName(data[0].user.name);
-                }
             } else {
-                console.error("API returned non-array:", data);
                 setTasks([]);
             }
         } catch (e) {
@@ -67,26 +64,28 @@ export default function Dashboard() {
         }
     };
 
-    useEffect(() => {
-        // Fetch user info to check role
-        const checkUser = async () => {
-            // We can check role by hitting an auth endpoint or decoding token if available. 
-            // Since fetchTasks returns 401 if not logged in, we can rely on that or add a specific me endpoint.
-            // Simpler: Fetch tasks, if 403 or we see Admin data, redirect.
-            // Actually, middleware redirects to /dashboard. We need to move them to /admin.
-            // Let's assume fetchTasks will work for now, but we need to know the role.
-            // Let's hitting /api/analytics which has user info.
-            try {
-                const res = await fetch("/api/analytics");
-                if (res.ok) {
-                    const data = await res.json();
-                    // Identify if current user is admin? 
-                    // The API doesn't explicitly return "currentUserRole" easily without modification.
-                    // BUT, let's just use the fact that we are in strict mode.
-                    // Ideally we should have a /api/me endpoint.
+    const fetchProfile = async () => {
+        try {
+            const res = await fetch("/api/auth/me");
+            if (res.ok) {
+                const data = await res.json();
+                if (data.role === 'ADMIN') {
+                    router.push('/admin');
+                    return;
                 }
-            } catch { }
-        };
+                setUser(data);
+                setUserName(data.name || "User");
+            }
+        } catch (e) {
+            console.error("Profile Fetch Error:", e);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    useEffect(() => {
         fetchTasks();
     }, [filterDate, filterCategory]);
 
@@ -110,79 +109,129 @@ export default function Dashboard() {
 
     const handleLogout = async () => {
         await fetch("/api/auth/logout", { method: "POST" });
-        router.push("/login"); // Middleware redirects to login, but explicit push is nice
+        router.push("/login");
     };
 
     return (
-        <div className="min-h-screen p-8">
+        <div className="min-h-screen p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-center mb-8 glass p-6 rounded-2xl">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">My Workspace</h1>
-                        <p className="text-sm text-gray-400 mt-1">Welcome back, <span className="text-white font-medium">{userName}</span></p>
+                <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-6 glass p-4 md:p-6 rounded-2xl gap-4 border border-white/5 shadow-2xl">
+                    <div className="flex items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">My Workspace</h1>
+                            <div className="flex flex-col">
+                                <p className="text-xs md:text-sm text-gray-400 mt-1">Welcome back, <span className="text-white font-medium">{userName}</span></p>
+                                {user?.email && (
+                                    <p className="text-[10px] text-gray-500 font-mono tracking-tighter bg-white/5 w-fit px-2 py-0.5 rounded border border-white/5 mt-1">{user.email}</p>
+                                )}
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowStats(!showStats)}
+                            className={`ml-4 w-10 h-10 rounded-xl border flex items-center justify-center transition-all duration-300 ${showStats ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10'}`}
+                            title={showStats ? "Hide Statistics" : "Show Statistics"}
+                        >
+                            {showStats ? '📊' : '📈'}
+                        </button>
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-2 md:gap-4">
                         <ThemeToggle />
-                        <Link href="/calendar" className="px-5 py-2.5 bg-green-600/20 hover:bg-green-600/30 text-green-300 border border-green-500/50 rounded-lg transition backdrop-blur-sm font-semibold">
+                        <Link href="/calendar" className="flex-1 lg:flex-initial px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-300 border border-green-500/30 rounded-lg transition backdrop-blur-sm font-semibold text-sm text-center">
                             📅 Calendar
                         </Link>
-                        <Link href="/analytics" className="px-5 py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/50 rounded-lg transition backdrop-blur-sm font-semibold">
+                        <Link href="/analytics" className="flex-1 lg:flex-initial px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-lg transition backdrop-blur-sm font-semibold text-sm text-center">
                             Team Analytics
                         </Link>
                         <button
                             onClick={() => { setEditingTask(null); setShowModal(true); }}
-                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-bold shadow-lg shadow-blue-500/25"
+                            className="w-full lg:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-bold shadow-lg shadow-blue-500/25 order-first lg:order-none"
                         >
                             + New Task
                         </button>
                         <button
                             onClick={handleLogout}
-                            className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition backdrop-blur-sm font-semibold"
+                            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-lg transition backdrop-blur-sm font-semibold text-sm"
                         >
                             Logout
                         </button>
                     </div>
                 </div>
 
-                {!loading && <CategoryStats stats={stats} title="Task Overview" />}
+                {!loading && showStats && <CategoryStats stats={stats} title="Overview" />}
 
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-6 px-2 gap-4">
-                    <h2 className="text-xl font-bold text-gray-300">My Tasks</h2>
-
-                    <div className="flex gap-3">
-                        <div className="flex flex-col">
-                            <label className="text-xs text-gray-400 mb-1 font-medium ml-1">Filter by Date</label>
-                            <input
-                                type="date"
-                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500/50 transition w-[160px]"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex flex-col">
-                            <label className="text-xs text-gray-400 mb-1 font-medium ml-1">Filter by Category</label>
-                            <select
-                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500/50 transition w-[160px]"
-                                value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
-                            >
-                                <option value="">All Categories</option>
-                                <option value="Axios">Axios</option>
-                                <option value="Whatsapp">Whatsapp</option>
-                                <option value="Other Task">Other Task</option>
-                                <option value="Releases">Releases</option>
-                                <option value="Monitoring">Monitoring</option>
-                            </select>
-                        </div>
-                        {(filterDate || filterCategory) && (
+                {/* Consolidated Filters */}
+                <div className="mb-6 p-3 glass rounded-2xl border border-white/5 shadow-xl">
+                    <div className="flex flex-wrap items-center gap-4">
+                        {/* Category Pills Group */}
+                        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-[280px] lg:min-w-0 pr-4 lg:border-r border-white/10">
+                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest shrink-0">Filter:</span>
                             <button
-                                onClick={() => { setFilterDate(""); setFilterCategory(""); }}
-                                className="self-end px-4 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition text-sm font-medium"
+                                onClick={() => setFilterCategory("")}
+                                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all duration-300 border ${!filterCategory
+                                    ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25"
+                                    : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                                    }`}
                             >
-                                Clear
+                                All
                             </button>
-                        )}
+                            {["Axios", "Whatsapp", "Other Task", "Releases", "Monitoring"].map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setFilterCategory(cat)}
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all duration-300 border ${filterCategory === cat
+                                        ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25"
+                                        : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                                        }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Date Group */}
+                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                            <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest shrink-0">Date:</span>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setFilterDate(new Date().toISOString().split('T')[0])}
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${filterDate === new Date().toISOString().split('T')[0]
+                                        ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/25"
+                                        : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                                        }`}
+                                >
+                                    Today
+                                </button>
+                                <button
+                                    onClick={() => setFilterDate(new Date(Date.now() - 86400000).toISOString().split('T')[0])}
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${filterDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]
+                                        ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/25"
+                                        : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                                        }`}
+                                >
+                                    Yesterday
+                                </button>
+                            </div>
+                            <div className="relative group">
+                                <input
+                                    type="date"
+                                    className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-purple-500/50 transition w-[120px] cursor-pointer"
+                                    value={filterDate}
+                                    onChange={(e) => setFilterDate(e.target.value)}
+                                />
+                            </div>
+                            {(filterDate || filterCategory) && (
+                                <button
+                                    onClick={() => { setFilterDate(""); setFilterCategory(""); }}
+                                    className="px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition text-[10px] font-black uppercase tracking-tighter"
+                                >
+                                    ✕ Clear
+                                </button>
+                            )}
+                            <div className="ml-2 pl-4 border-l border-white/10 hidden md:flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                {tasks.length} Results
+                            </div>
+                        </div>
                     </div>
                 </div>
 
