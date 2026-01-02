@@ -17,6 +17,8 @@ export default function Dashboard() {
     const [stats, setStats] = useState<Record<string, number>>({});
     const [filterDate, setFilterDate] = useState("");
     const [filterCategory, setFilterCategory] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [userName, setUserName] = useState("User");
     const [user, setUser] = useState<any>(null);
     const [showStats, setShowStats] = useState(true);
@@ -37,6 +39,7 @@ export default function Dashboard() {
             const query = new URLSearchParams();
             if (filterDate) query.append("date", filterDate);
             if (filterCategory) query.append("category", filterCategory);
+            if (debouncedSearch) query.append("search", debouncedSearch);
 
             const res = await fetch(`/api/tasks?${query.toString()}`);
             if (res.status === 401) {
@@ -86,8 +89,15 @@ export default function Dashboard() {
     }, []);
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    useEffect(() => {
         fetchTasks();
-    }, [filterDate, filterCategory]);
+    }, [filterDate, filterCategory, debouncedSearch]);
 
     const handleTaskSaved = () => {
         setShowModal(false);
@@ -160,14 +170,27 @@ export default function Dashboard() {
                 {!loading && showStats && <CategoryStats stats={stats} title="Overview" />}
 
                 {/* Consolidated Filters */}
-                <div className="mb-6 p-3 glass rounded-2xl border border-white/5 shadow-xl">
-                    <div className="flex flex-wrap items-center gap-4">
+                <div className="mb-6 p-2 md:p-3 glass rounded-2xl border border-white/5 shadow-xl">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4">
+                        {/* Search Bar */}
+                        <div className="w-full md:w-[140px] order-last md:order-first">
+                            <div className="relative group">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-400 transition text-xs">🔍</span>
+                                <input
+                                    type="text"
+                                    placeholder="Search tasks..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-1 pl-9 pr-4 text-[10px] font-medium text-white focus:outline-none focus:border-blue-500/50 focus:bg-blue-500/5 transition-all shadow-inner placeholder:text-gray-600"
+                                />
+                            </div>
+                        </div>
                         {/* Category Pills Group */}
                         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-[280px] lg:min-w-0 pr-4 lg:border-r border-white/10">
-                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest shrink-0">Filter:</span>
+                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest shrink-0">Filter:</span>
                             <button
                                 onClick={() => setFilterCategory("")}
-                                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all duration-300 border ${!filterCategory
+                                className={`px-2 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 border ${!filterCategory
                                     ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25"
                                     : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
                                     }`}
@@ -178,7 +201,7 @@ export default function Dashboard() {
                                 <button
                                     key={cat}
                                     onClick={() => setFilterCategory(cat)}
-                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all duration-300 border ${filterCategory === cat
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all duration-300 border ${filterCategory === cat
                                         ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25"
                                         : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
                                         }`}
@@ -190,11 +213,11 @@ export default function Dashboard() {
 
                         {/* Date Group */}
                         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                            <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest shrink-0">Date:</span>
+                            <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest shrink-0">Date:</span>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setFilterDate(new Date().toISOString().split('T')[0])}
-                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${filterDate === new Date().toISOString().split('T')[0]
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all border ${filterDate === new Date().toISOString().split('T')[0]
                                         ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/25"
                                         : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
                                         }`}
@@ -203,7 +226,7 @@ export default function Dashboard() {
                                 </button>
                                 <button
                                     onClick={() => setFilterDate(new Date(Date.now() - 86400000).toISOString().split('T')[0])}
-                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${filterDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all border ${filterDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]
                                         ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/25"
                                         : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
                                         }`}
@@ -214,15 +237,15 @@ export default function Dashboard() {
                             <div className="relative group">
                                 <input
                                     type="date"
-                                    className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-purple-500/50 transition w-[120px] cursor-pointer"
+                                    className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white focus:outline-none focus:border-purple-500/50 transition w-[120px] cursor-pointer"
                                     value={filterDate}
                                     onChange={(e) => setFilterDate(e.target.value)}
                                 />
                             </div>
-                            {(filterDate || filterCategory) && (
+                            {(filterDate || filterCategory || searchTerm) && (
                                 <button
-                                    onClick={() => { setFilterDate(""); setFilterCategory(""); }}
-                                    className="px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition text-[10px] font-black uppercase tracking-tighter"
+                                    onClick={() => { setFilterDate(""); setFilterCategory(""); setSearchTerm(""); }}
+                                    className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition text-[10px] font-black uppercase tracking-tighter"
                                 >
                                     ✕ Clear
                                 </button>

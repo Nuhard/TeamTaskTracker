@@ -16,6 +16,7 @@ export default function TaskForm({ task, onClose, onSave }: Props) {
     const [selectedTemplate, setSelectedTemplate] = useState("");
     const [showSaveTemplate, setShowSaveTemplate] = useState(false);
     const [templateName, setTemplateName] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const CATEGORIES = ["Axios", "Whatsapp", "Other Task", "Releases", "Monitoring"];
 
@@ -52,6 +53,9 @@ export default function TaskForm({ task, onClose, onSave }: Props) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+
         const data = { description, category, ticketNumber, status, date };
 
         const method = task ? "PUT" : "POST";
@@ -67,6 +71,7 @@ export default function TaskForm({ task, onClose, onSave }: Props) {
             if (!res.ok) {
                 const err = await res.json();
                 alert(`Error saving task: ${err.error || res.statusText}`);
+                setIsSubmitting(false);
                 return;
             }
 
@@ -74,6 +79,7 @@ export default function TaskForm({ task, onClose, onSave }: Props) {
         } catch (e) {
             alert("Network error occurred");
             console.error(e);
+            setIsSubmitting(false);
         }
     };
 
@@ -199,8 +205,12 @@ export default function TaskForm({ task, onClose, onSave }: Props) {
                         </div>
                         <div className="flex gap-3">
                             <button type="button" onClick={onClose} className="px-5 py-2.5 bg-white/10 text-white rounded-lg hover:bg-white/20 transition font-medium">Cancel</button>
-                            <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-bold shadow-lg shadow-blue-500/25">
-                                {task ? "Update Task" : "Create Task"}
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className={`px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-bold shadow-lg shadow-blue-500/25 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {isSubmitting ? "Saving..." : (task ? "Update Task" : "Create Task")}
                             </button>
                         </div>
                     </div>

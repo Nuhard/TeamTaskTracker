@@ -8,6 +8,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const filterCategory = searchParams.get("category");
         const filterDate = searchParams.get("date");
+        const search = searchParams.get("search");
 
         const token = cookies().get("token")?.value;
         const decoded = token ? verifyToken(token) : null;
@@ -35,6 +36,12 @@ export async function GET(request: Request) {
             where.date = {
                 gte: startOfDay,
                 lte: endOfDay
+            };
+        }
+
+        if (search) {
+            where.description = {
+                contains: search
             };
         }
 

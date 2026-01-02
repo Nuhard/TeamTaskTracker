@@ -5,8 +5,8 @@ const prisma = new PrismaClient({ log: ['query'] });
 
 async function main() {
     console.log("Checking DB...");
-    const email = 'admin@example.com';
-    const password = 'Admin@SRED';
+    const email = 'admin@sre.com';
+    const password = 'adminSRE123';
     const name = 'Admin User';
 
     const passwordHash = await bcrypt.hash(password, 10);
