@@ -382,11 +382,9 @@ export default function AdminDashboard() {
                         Weekly Productivity Grid
                     </h2>
                     <div className="flex flex-wrap gap-1.5">
-                        {Array.from({ length: 7 }).map((_, i) => {
-                            const date = new Date();
-                            date.setDate(date.getDate() - (6 - i));
-                            const dateStr = format(date, 'yyyy-MM-dd');
-                            const dayTasks = allTasks.filter(t => format(new Date(t.date), 'yyyy-MM-dd') === dateStr).length;
+                        {stats?.weeklyStats?.map((day: any, i: number) => {
+                            const date = new Date(day.date);
+                            const dayTasks = day.count;
                             const intensity = Math.min(dayTasks * 20, 100);
 
                             return (
@@ -401,7 +399,15 @@ export default function AdminDashboard() {
                                     <span className="block text-[7px] text-gray-600">{format(date, 'MMM dd')}</span>
                                 </div>
                             );
-                        })}
+                        }) || (
+                                // Fallback skeleton or empty state if stats not loaded yet
+                                Array.from({ length: 7 }).map((_, i) => (
+                                    <div key={i} className="flex-1 min-w-[70px] text-center animate-pulse">
+                                        <div className="h-10 w-full rounded-lg bg-white/5 mb-1.5" />
+                                        <div className="h-2 w-4 bg-white/5 mx-auto rounded" />
+                                    </div>
+                                ))
+                            )}
                     </div>
                 </div>
 

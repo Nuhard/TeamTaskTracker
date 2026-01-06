@@ -77,13 +77,40 @@ export async function GET(req: Request) {
             };
         });
 
+        // Returns array of last 7 days with counts
+        const weeklyStats = await Promise.all(
+            Array.from({ length: 7 }).map(async (_, i) => {
+                const date = new Date();
+                date.setHours(0, 0, 0, 0); // Normalize to start of day
+                date.setDate(date.getDate() - (6 - i)); // Go back 6 days to today
+
+                const nextDay = new Date(date);
+                nextDay.setDate(date.getDate() + 1);
+
+                const count = await prisma.task.count({
+                    where: {
+                        date: {
+                            gte: date,
+                            lt: nextDay
+                        }
+                    }
+                });
+
+                return {
+                    date: date.toISOString(), // Send back ISO string for frontend parsing
+                    count
+                };
+            })
+        );
+
         return NextResponse.json({
             totalTasks,
             pendingTasks,
             inProgressTasks,
             completedTasks,
             categoryStats,
-            userReports
+            userReports,
+            weeklyStats
         });
     } catch (error) {
         console.error("Admin Stats Error:", error);
