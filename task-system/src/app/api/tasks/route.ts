@@ -84,6 +84,64 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Description is required" }, { status: 400 });
         }
 
+
+
+        // Check for duplicates if ticketNumber is provided
+        if (ticketNumber) {
+            const taskDate = date ? new Date(date) : new Date();
+            const startOfDay = new Date(taskDate);
+            startOfDay.setHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(taskDate);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            const existingTask = await prisma.task.findFirst({
+                where: {
+                    userId: decoded.id,
+                    category,
+                    ticketNumber,
+                    date: {
+                        gte: startOfDay,
+                        lte: endOfDay
+                    }
+                }
+            });
+
+            if (existingTask) {
+                return NextResponse.json(
+                    { error: `Ticket "${ticketNumber}" logged already on ${taskDate.toLocaleDateString()}` },
+                    { status: 400 }
+                );
+            }
+        } else {
+            // Check for duplicate description if no ticket number is provided (for other categories or Axios without ticket)
+            const taskDate = date ? new Date(date) : new Date();
+            const startOfDay = new Date(taskDate);
+            startOfDay.setHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(taskDate);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            const existingTask = await prisma.task.findFirst({
+                where: {
+                    userId: decoded.id,
+                    category,
+                    description,
+                    date: {
+                        gte: startOfDay,
+                        lte: endOfDay
+                    }
+                }
+            });
+
+            if (existingTask) {
+                return NextResponse.json(
+                    { error: `Task "${description}" logged already on ${taskDate.toLocaleDateString()}` },
+                    { status: 400 }
+                );
+            }
+        }
+
         const task = await prisma.task.create({
             data: {
                 description,
