@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import ThemeToggle from "@/components/ThemeToggle";
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    PieChart, Pie, Cell, AreaChart, Area
+} from 'recharts';
 
 export default function AdminDashboard() {
     const router = useRouter();
@@ -415,6 +419,7 @@ export default function AdminDashboard() {
                 <div className="flex bg-black/30 p-1.5 rounded-xl border border-white/5 mb-8 gap-1 overflow-x-auto scrollbar-hide">
                     {[
                         { id: 'productivity', label: 'Productivity', icon: '📊' },
+                        { id: 'reports', label: 'Visual Reports', icon: '📈' },
                         { id: 'feed', label: 'Master Feed', icon: '🌐' },
                         { id: 'directory', label: 'User Directory', icon: '👥' },
                         { id: 'audit', label: 'Security Audit', icon: '🛡️' }
@@ -549,6 +554,146 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
+                    {activeTab === 'reports' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* Header & Controls */}
+                            <div className="flex flex-col md:flex-row justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+                                <div>
+                                    <h2 className="text-xl font-black text-white flex items-center gap-2">
+                                        <span className="p-2 bg-purple-500/20 rounded-lg">📈</span>
+                                        Visual Intelligence
+                                    </h2>
+                                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-[0.15em] ml-11">Data Visualization & Export</p>
+                                </div>
+                                <div className="flex items-center gap-4 mt-4 md:mt-0">
+                                    <div className="text-right mr-4 hidden md:block">
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Analysis Period</p>
+                                        <p className="text-sm font-bold text-white">
+                                            {dateRange.start ? `${format(new Date(dateRange.start), 'MMM dd')} - ${dateRange.end ? format(new Date(dateRange.end), 'MMM dd') : 'Now'}` : 'All Time'}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowCsvModal(true)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 rounded-xl transition font-bold text-xs uppercase tracking-wider"
+                                    >
+                                        <span>📥</span> Export CSV Data
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Task Distribution Chart */}
+                                <div className="glass p-6 rounded-2xl border border-white/5 shadow-xl">
+                                    <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2">
+                                        <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                                        Task Volume by SRE Engineer
+                                    </h3>
+                                    <div className="h-[300px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={stats?.userReports || []}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                                <XAxis
+                                                    dataKey="name"
+                                                    stroke="#6b7280"
+                                                    fontSize={10}
+                                                    tickLine={false}
+                                                    axisLine={false}
+                                                    interval={0}
+                                                    tickFormatter={(value) => value.split(" ")[0]}
+                                                />
+                                                <YAxis stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                                />
+                                                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
+                                                <Bar dataKey="totalTasks" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Total Tasks" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Category Breakdown Pie */}
+                                <div className="glass p-6 rounded-2xl border border-white/5 shadow-xl">
+                                    <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2">
+                                        <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
+                                        Global Category Distribution
+                                    </h3>
+                                    <div className="h-[300px] w-full flex items-center justify-center relative">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={stats?.categoryStats || []}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={100}
+                                                    paddingAngle={5}
+                                                    dataKey="value"
+                                                >
+                                                    {(stats?.categoryStats || []).map((entry: any, index: number) => {
+                                                        const colors = ['#3b82f6', '#22c55e', '#6366f1', '#a855f7', '#ec4899'];
+                                                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} stroke="rgba(0,0,0,0.2)" />;
+                                                    })}
+                                                </Pie>
+                                                <Tooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                                                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                        {/* Center Label */}
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div className="text-center">
+                                                <span className="block text-2xl font-black text-white">{stats?.totalTasks || 0}</span>
+                                                <span className="text-[9px] text-gray-500 uppercase tracking-widest">Total</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Weekly Trend Area Chart */}
+                                <div className="glass p-6 rounded-2xl border border-white/5 shadow-xl col-span-1 lg:col-span-2">
+                                    <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2">
+                                        <span className="w-1.5 h-6 bg-green-500 rounded-full"></span>
+                                        7-Day Activity Trend
+                                    </h3>
+                                    <div className="h-[300px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={stats?.weeklyStats || []}>
+                                                <defs>
+                                                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                                <XAxis
+                                                    dataKey="date"
+                                                    tickFormatter={(str) => format(new Date(str), 'MMM dd')}
+                                                    stroke="#6b7280"
+                                                    fontSize={10}
+                                                    tickLine={false}
+                                                    axisLine={false}
+                                                />
+                                                <YAxis stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} />
+                                                <Tooltip
+                                                    labelFormatter={(label) => format(new Date(label), 'MMM dd, yyyy')}
+                                                    contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                                />
+                                                <Area
+                                                    type="monotone"
+                                                    dataKey="count"
+                                                    stroke="#22c55e"
+                                                    strokeWidth={3}
+                                                    fillOpacity={1}
+                                                    fill="url(#colorCount)"
+                                                />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {activeTab === 'feed' && (
                         <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 shadow-2xl">
                             <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
