@@ -19,6 +19,8 @@ export default function Dashboard() {
     const [filterCategory, setFilterCategory] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [userName, setUserName] = useState("User");
     const [user, setUser] = useState<any>(null);
     const [showStats, setShowStats] = useState(true);
@@ -40,6 +42,8 @@ export default function Dashboard() {
             if (filterDate) query.append("date", filterDate);
             if (filterCategory) query.append("category", filterCategory);
             if (debouncedSearch) query.append("search", debouncedSearch);
+            query.append("month", String(selectedMonth + 1)); // API expects 1-12
+            query.append("year", String(selectedYear));
 
             const res = await fetch(`/api/tasks?${query.toString()}`);
             if (res.status === 401) {
@@ -97,7 +101,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchTasks();
-    }, [filterDate, filterCategory, debouncedSearch]);
+    }, [filterDate, filterCategory, debouncedSearch, selectedMonth, selectedYear]);
 
     const handleTaskSaved = () => {
         setShowModal(false);
@@ -211,6 +215,29 @@ export default function Dashboard() {
                             ))}
                         </div>
 
+                        {/* Month/Year Selector */}
+                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest shrink-0">Period:</span>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => { setSelectedMonth(Number(e.target.value)); setFilterDate(""); }}
+                                className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white focus:outline-none focus:border-emerald-500/50 transition cursor-pointer appearance-none"
+                            >
+                                {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => (
+                                    <option key={i} value={i} className="bg-gray-900 text-white">{m}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => { setSelectedYear(Number(e.target.value)); setFilterDate(""); }}
+                                className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white focus:outline-none focus:border-emerald-500/50 transition cursor-pointer appearance-none"
+                            >
+                                {Array.from({ length: new Date().getFullYear() - 2024 + 2 }, (_, i) => 2024 + i).map(y => (
+                                    <option key={y} value={y} className="bg-gray-900 text-white">{y}</option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* Date Group */}
                         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                             <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest shrink-0">Date:</span>
@@ -244,7 +271,7 @@ export default function Dashboard() {
                             </div>
                             {(filterDate || filterCategory || searchTerm) && (
                                 <button
-                                    onClick={() => { setFilterDate(""); setFilterCategory(""); setSearchTerm(""); }}
+                                    onClick={() => { setFilterDate(""); setFilterCategory(""); setSearchTerm(""); setSelectedMonth(new Date().getMonth()); setSelectedYear(new Date().getFullYear()); }}
                                     className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition text-[10px] font-black uppercase tracking-tighter"
                                 >
                                     ✕ Clear

@@ -29,6 +29,7 @@ export async function GET(request: Request) {
         }
 
         if (filterDate) {
+            // Specific date filter takes precedence
             const startOfDay = new Date(filterDate);
             startOfDay.setHours(0, 0, 0, 0);
             const endOfDay = new Date(filterDate);
@@ -36,6 +37,20 @@ export async function GET(request: Request) {
             where.date = {
                 gte: startOfDay,
                 lte: endOfDay
+            };
+        } else {
+            // Month/year filter (defaults to current month if not provided)
+            const now = new Date();
+            const monthParam = searchParams.get("month");
+            const yearParam = searchParams.get("year");
+            const month = monthParam ? parseInt(monthParam, 10) : now.getMonth() + 1; // 1-12
+            const year = yearParam ? parseInt(yearParam, 10) : now.getFullYear();
+
+            const startOfMonth = new Date(year, month - 1, 1, 0, 0, 0, 0);
+            const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+            where.date = {
+                gte: startOfMonth,
+                lte: endOfMonth
             };
         }
 
